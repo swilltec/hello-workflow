@@ -7,11 +7,13 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func Workflow(ctx workflow.Context, name string) (string, error) {
+func Workflow(ctx workflow.Context, name string) (string, error) { // Replace name string with a param struct
 	ao := workflow.ActivityOptions{
 		ScheduleToStartTimeout: time.Minute,
 		StartToCloseTimeout:    time.Minute,
 	}
+
+	// Set maximum retry and also listen for specific errors
 
 	ctx = workflow.WithActivityOptions(ctx, ao)
 

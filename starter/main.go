@@ -17,6 +17,7 @@ func main() {
 	defer c.Close()
 
 	workflowOptions := client.StartWorkflowOptions{
+		ID:        "hello-world-unique-id",
 		TaskQueue: "hello-world",
 	}
 
