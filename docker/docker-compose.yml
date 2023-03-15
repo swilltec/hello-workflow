@@ -1,4 +1,5 @@
-version: "3.5"
+version: "3.9"
+
 services:
   elasticsearch:
     container_name: temporal-elasticsearch
@@ -10,25 +11,27 @@ services:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms256m -Xmx256m
       - xpack.security.enabled=false
-    image: elasticsearch:${ELASTICSEARCH_VERSION}
+    image: elasticsearch:7.16.2
     networks:
       - temporal-network
     expose:
       - 9200
     volumes:
       - /var/lib/elasticsearch/data
+  
   postgresql:
     container_name: temporal-postgresql
     environment:
       POSTGRES_PASSWORD: temporal
       POSTGRES_USER: temporal
-    image: postgres:${POSTGRESQL_VERSION}
+    image: postgres:13
     networks:
       - temporal-network
     expose:
       - 5432
     volumes:
       - /var/lib/postgresql/data
+  
   temporal:
     container_name: temporal
     depends_on:
@@ -44,7 +47,7 @@ services:
       - ENABLE_ES=true
       - ES_SEEDS=elasticsearch
       - ES_VERSION=v7
-    image: temporalio/auto-setup:${TEMPORAL_VERSION}
+    image: temporalio/auto-setup:1.20.0
     networks:
       - temporal-network
     ports:
@@ -53,17 +56,19 @@ services:
       kompose.volume.type: configMap
     volumes:
       - ./dynamicconfig:/etc/temporal/config/dynamicconfig
+  
   temporal-admin-tools:
     container_name: temporal-admin-tools
     depends_on:
       - temporal
     environment:
       - TEMPORAL_CLI_ADDRESS=temporal:7233
-    image: temporalio/admin-tools:${TEMPORAL_VERSION}
+    image: temporalio/admin-tools:1.20.0
     networks:
       - temporal-network
     stdin_open: true
     tty: true
+  
   temporal-ui:
     container_name: temporal-ui
     depends_on:
@@ -71,11 +76,28 @@ services:
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CORS_ORIGINS=http://localhost:3000
-    image: temporalio/ui:${TEMPORAL_UI_VERSION}
+    image: temporalio/ui:2.10.3
     networks:
       - temporal-network
     ports:
       - 8080:8080
+
+  wafi-worker:
+    image: swilltec/wafi-worker
+    depends_on:
+      - temporal
+    container_name: wafi-worker
+    restart: "on-failure"
+    network_mode: host
+
+  wafi-starter:
+    image: swilltec/wafi-starter
+    container_name: wafi-starter
+    depends_on:
+      - temporal
+    restart: "on-failure"
+    network_mode: host
+
 networks:
   temporal-network:
     driver: bridge

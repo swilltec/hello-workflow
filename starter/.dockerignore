@@ -1,0 +1,6 @@
+.github
+docker
+docker-compose-prod.yml
+docker-compose.yml
+readme.md
+.git

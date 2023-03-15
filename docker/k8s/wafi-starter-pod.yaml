@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -o k8s
+    kompose.version: 1.28.0 (c4137012e)
+  creationTimestamp: null
+  labels:
+    io.kompose.network/docker-default: "true"
+    io.kompose.service: wafi-starter
+  name: wafi-starter
+spec:
+  containers:
+    - image: swilltec/wafi-starter
+      name: wafi-starter
+      resources: {}
+  restartPolicy: OnFailure
+status: {}

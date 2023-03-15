@@ -1,0 +1,81 @@
+version: '3.9'
+
+services:
+  app:
+    image: safetityhq/nasfat-backend
+    expose:
+      - "8000"
+    volumes:
+      - media_volume:/nasfat/media
+    command: >
+      sh -c "cd src &&
+             python manage.py wait_for_db &&
+             python manage.py migrate &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers=4"
+    env_file:
+      - .env
+    depends_on: 
+      - db
+    networks:
+      - nasfat-network
+    container_name: nasfat-backend
+      
+  db:
+    image: postgres:12.1-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
+    expose:
+      - 5432
+    networks:
+      - nasfat-network
+
+  nginx:
+    build: ./nginx
+    ports:
+      - 80:80
+    volumes:
+      - media_volume:/nasfat/media
+      - ./nginx:/etc/nginx/conf.d
+    depends_on:
+      - app
+    networks:
+      - nasfat-network
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    restart: always
+
+  redis:
+    image: "redis:latest"
+    expose:
+      - 6379
+    working_dir: /data
+    volumes:
+      - redis_data:/data
+    restart: "on-failure"
+    networks:
+      - nasfat-network
+
+  celery_worker:
+    image: safetityhq/nasfat-backend
+    command: >
+     sh -c "cd src &&
+            celery -A config worker --loglevel=INFO -Q celery --autoscale=10,2 --purge -n worker@%h"
+    depends_on:
+      - app
+      - redis
+    env_file:
+      - .env
+    container_name: celery_worker
+    restart: always
+    networks:
+      - nasfat-network
+
+volumes:
+    postgres_data:
+    redis_data:
+    media_volume:
+
+networks:
+  nasfat-network:
+    name: nasfat-network
