@@ -8,15 +8,22 @@ Setup was done using:
 
 ### Start
 #### Without Kubernetes
+![Sample](./images/terminal.jpeg)
 1. `$ cd docker`
 2. `$ docker compose up` Start services
 
-
-
 ####
+![Sample](./images/web.jpeg)
 1. `$ minikube start` start local k8s
 2. `$ cd docker`
 3. `$ kompose convert -o k8s` Convert docker compose to k8s config (Optional)
 4. `$ kubectl apply -f k8s` start deployment. Congratulations 💥💥💥💥
 5. `$ minikube dashboard`
 6. `$ minikub stop`
+
+
+#### Improvement suggestion
+* Add security and static test
+* Add conditional alert when certain failures occurs. for example can't connect to db
+* Reduce app build time.
+* Prevent pushing changes directly to the master branch.
